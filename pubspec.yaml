@@ -1,6 +1,6 @@
 name: apricity
-description: "A new Flutter project."
-publish_to: 'none'
+description: "A fun and simple gratitude-journal"
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -10,10 +10,21 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # FlutterFire
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.8
+  firebase_storage: ^12.4.6
+
+  # Device / utilities
+  camera: ^0.11.1
+  path_provider: ^2.1.5
+  uuid: ^4.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
