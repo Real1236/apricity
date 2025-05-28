@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
-  runApp(const MainApp());
-}
+import 'firebase_options.dart';
+import 'app.dart';
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
-    );
-  }
+/// Entry point of the Apricity MVP.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Retrieve available cameras once at startup.
+  final cameras = await availableCameras();
+  runApp(ApricityApp(cameras: cameras));
 }
