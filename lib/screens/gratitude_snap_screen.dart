@@ -1,0 +1,147 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../services/entry_service.dart';
+
+class GratitudeSnapScreen extends StatefulWidget {
+  const GratitudeSnapScreen({super.key, required this.primaryCamera});
+
+  final CameraDescription primaryCamera;
+
+  @override
+  State<GratitudeSnapScreen> createState() => _GratitudeSnapScreenState();
+}
+
+class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
+  late CameraController _controller;
+  late Future<void> _initCameraFuture;
+  XFile? _capturedImage;
+  final TextEditingController _captionController = TextEditingController();
+  bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = CameraController(
+      widget.primaryCamera,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
+    _initCameraFuture = _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _captionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      await _initCameraFuture;
+      final XFile image = await _controller.takePicture();
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      final String fileName =
+          'gratitude_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String savedImagePath = '${appDir.path}/$fileName';
+      await image.saveTo(savedImagePath);
+      setState(() => _capturedImage = XFile(savedImagePath));
+    } catch (e) {
+      debugPrint('Error capturing image: $e');
+    }
+  }
+
+  Future<void> _submitEntry() async {
+    if (_capturedImage == null || _captionController.text.trim().isEmpty) {
+      return;
+    }
+    setState(() => _isUploading = true);
+
+    try {
+      await EntryService().createEntry(
+        imageFile: File(_capturedImage!.path),
+        caption: _captionController.text,
+      );
+    } catch (e) {
+      debugPrint('Failed to create entry: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _capturedImage = null;
+        _captionController.clear();
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Gratitude saved!')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Gratitude Snap')),
+      body: FutureBuilder(
+        future: _initCameraFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Column(
+              children: [
+                Expanded(
+                  child: _capturedImage == null
+                      ? CameraPreview(_controller)
+                      : Image.file(
+                          File(_capturedImage!.path),
+                          fit: BoxFit.cover,
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: TextField(
+                    controller: _captionController,
+                    decoration: const InputDecoration(
+                      labelText: 'What are you grateful for?',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: null,
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FloatingActionButton(
+                      heroTag: 'snap',
+                      onPressed: _takePicture,
+                      child: const Icon(Icons.photo_camera),
+                    ),
+                    if (_capturedImage != null)
+                      FilledButton.icon(
+                        onPressed: _isUploading ? null : _submitEntry,
+                        icon: _isUploading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.send),
+                        label: const Text('Save'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+}
