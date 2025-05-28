@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "874287673860",
+    "project_id": "apricity-afe56",
+    "storage_bucket": "apricity-afe56.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874287673860:android:b7f8884fe1d75cab923b51",
+        "android_client_info": {
+          "package_name": "com.arthurchan.apricity"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhsvcReQlL4OKFwHypUFTYDSeV7XiYjHk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
