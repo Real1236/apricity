@@ -1,4 +1,4 @@
-package com.example.apricity
+package com.arthurchan.apricity
 
 import io.flutter.embedding.android.FlutterActivity
 
