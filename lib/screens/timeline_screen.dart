@@ -14,9 +14,7 @@ import 'gratitude_snap_screen.dart';
 /// instantly when you pop back from the snap screen or when
 /// offline writes sync.
 class TimelineScreen extends StatelessWidget {
-  const TimelineScreen({super.key, required this.cameras});
-
-  final List<CameraDescription> cameras;
+  const TimelineScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -62,15 +60,6 @@ class TimelineScreen extends StatelessWidget {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'newEntry',
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => GratitudeSnapScreen(primaryCamera: cameras.first),
-          ),
-        ),
-        child: const Icon(Icons.photo_camera),
       ),
     );
   }

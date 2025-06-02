@@ -37,7 +37,7 @@ class _MainNavState extends State<_MainNav> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      TimelineScreen(cameras: widget.cameras),
+      TimelineScreen(),
       GratitudeSnapScreen(primaryCamera: widget.cameras.first),
     ];
 
