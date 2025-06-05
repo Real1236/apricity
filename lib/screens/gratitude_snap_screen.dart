@@ -16,8 +16,8 @@ class GratitudeSnapScreen extends StatefulWidget {
 }
 
 class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
-  late CameraController _controller;
-  late Future<void> _initCameraFuture;
+  CameraController? _controller;
+  Future<void>? _initCameraFuture;
   XFile? _capturedImage;
   final TextEditingController _captionController = TextEditingController();
   bool _isUploading = false;
@@ -25,25 +25,40 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(
+  }
+
+  Future<void> startCamera() async {
+    if (_controller != null) return;
+    final controller = CameraController(
       widget.primaryCamera,
       ResolutionPreset.medium,
       enableAudio: false,
     );
-    _initCameraFuture = _controller.initialize();
+    _controller = controller;
+    _initCameraFuture = controller.initialize();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> stopCamera() async {
+    if (_controller == null) return;
+    await _controller!.dispose();
+    _controller = null;
+    _initCameraFuture = null;
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    stopCamera();
     _captionController.dispose();
     super.dispose();
   }
 
   Future<void> _takePicture() async {
     try {
-      await _initCameraFuture;
-      final XFile image = await _controller.takePicture();
+      if (_controller == null) return;
+      await _initCameraFuture!;
+      final XFile image = await _controller!.takePicture();
       final Directory appDir = await getApplicationDocumentsDirectory();
       final String fileName =
           'gratitude_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -86,15 +101,17 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Gratitude Snap')),
-      body: FutureBuilder(
-        future: _initCameraFuture,
-        builder: (context, snapshot) {
+      body: _initCameraFuture == null
+          ? const Center(child: Text('Camera stopped'))
+          : FutureBuilder(
+              future: _initCameraFuture,
+              builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return Column(
               children: [
                 Expanded(
                   child: _capturedImage == null
-                      ? CameraPreview(_controller)
+                      ? CameraPreview(_controller!)
                       : Image.file(
                           File(_capturedImage!.path),
                           fit: BoxFit.cover,
@@ -140,8 +157,8 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
             );
           }
           return const Center(child: CircularProgressIndicator());
-        },
-      ),
+              },
+            ),
     );
   }
 }

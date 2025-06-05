@@ -33,12 +33,17 @@ class _MainNav extends StatefulWidget {
 
 class _MainNavState extends State<_MainNav> {
   int _current = 0;
+  final GlobalKey<_GratitudeSnapScreenState> _snapKey =
+      GlobalKey<_GratitudeSnapScreenState>();
 
   @override
   Widget build(BuildContext context) {
     final screens = [
       TimelineScreen(),
-      GratitudeSnapScreen(primaryCamera: widget.cameras.first),
+      GratitudeSnapScreen(
+        key: _snapKey,
+        primaryCamera: widget.cameras.first,
+      ),
     ];
 
     return Scaffold(
@@ -57,7 +62,14 @@ class _MainNavState extends State<_MainNav> {
             label: 'Snap',
           ),
         ],
-        onDestinationSelected: (i) => setState(() => _current = i),
+        onDestinationSelected: (i) {
+          if (i == 1 && _current != 1) {
+            _snapKey.currentState?.startCamera();
+          } else if (i != 1 && _current == 1) {
+            _snapKey.currentState?.stopCamera();
+          }
+          setState(() => _current = i);
+        },
       ),
     );
   }
