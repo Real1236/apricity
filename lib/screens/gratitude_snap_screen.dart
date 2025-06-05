@@ -12,12 +12,12 @@ class GratitudeSnapScreen extends StatefulWidget {
   final CameraDescription primaryCamera;
 
   @override
-  State<GratitudeSnapScreen> createState() => _GratitudeSnapScreenState();
+  State<GratitudeSnapScreen> createState() => GratitudeSnapScreenState();
 }
 
-class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
-  late CameraController _controller;
-  late Future<void> _initCameraFuture;
+class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
+  CameraController? _controller;
+  Future<void>? _initCameraFuture;
   XFile? _capturedImage;
   final TextEditingController _captionController = TextEditingController();
   bool _isUploading = false;
@@ -25,25 +25,40 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(
+  }
+
+  Future<void> startCamera() async {
+    if (_controller != null) return;
+    final controller = CameraController(
       widget.primaryCamera,
       ResolutionPreset.medium,
       enableAudio: false,
     );
-    _initCameraFuture = _controller.initialize();
+    _controller = controller;
+    _initCameraFuture = controller.initialize();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> stopCamera() async {
+    if (_controller == null) return;
+    await _controller!.dispose();
+    _controller = null;
+    _initCameraFuture = null;
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    stopCamera();
     _captionController.dispose();
     super.dispose();
   }
 
   Future<void> _takePicture() async {
     try {
-      await _initCameraFuture;
-      final XFile image = await _controller.takePicture();
+      if (_controller == null) return;
+      await _initCameraFuture!;
+      final XFile image = await _controller!.takePicture();
       final Directory appDir = await getApplicationDocumentsDirectory();
       final String fileName =
           'gratitude_${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -86,62 +101,64 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Gratitude Snap')),
-      body: FutureBuilder(
-        future: _initCameraFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _capturedImage == null
-                      ? CameraPreview(_controller)
-                      : Image.file(
-                          File(_capturedImage!.path),
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: TextField(
-                    controller: _captionController,
-                    decoration: const InputDecoration(
-                      labelText: 'What are you grateful for?',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: null,
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    FloatingActionButton(
-                      heroTag: 'snap',
-                      onPressed: _takePicture,
-                      child: const Icon(Icons.photo_camera),
-                    ),
-                    if (_capturedImage != null)
-                      FilledButton.icon(
-                        onPressed: _isUploading ? null : _submitEntry,
-                        icon: _isUploading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.send),
-                        label: const Text('Save'),
+      body: _initCameraFuture == null
+          ? const Center(child: Text('Camera stopped'))
+          : FutureBuilder(
+              future: _initCameraFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: _capturedImage == null
+                            ? CameraPreview(_controller!)
+                            : Image.file(
+                                File(_capturedImage!.path),
+                                fit: BoxFit.cover,
+                              ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: TextField(
+                          controller: _captionController,
+                          decoration: const InputDecoration(
+                            labelText: 'What are you grateful for?',
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: null,
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'snap',
+                            onPressed: _takePicture,
+                            child: const Icon(Icons.photo_camera),
+                          ),
+                          if (_capturedImage != null)
+                            FilledButton.icon(
+                              onPressed: _isUploading ? null : _submitEntry,
+                              icon: _isUploading
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.send),
+                              label: const Text('Save'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+                return const Center(child: CircularProgressIndicator());
+              },
+            ),
     );
   }
 }
