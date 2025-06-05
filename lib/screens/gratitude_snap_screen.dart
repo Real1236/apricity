@@ -12,10 +12,10 @@ class GratitudeSnapScreen extends StatefulWidget {
   final CameraDescription primaryCamera;
 
   @override
-  State<GratitudeSnapScreen> createState() => _GratitudeSnapScreenState();
+  State<GratitudeSnapScreen> createState() => GratitudeSnapScreenState();
 }
 
-class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
+class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   CameraController? _controller;
   Future<void>? _initCameraFuture;
   XFile? _capturedImage;
@@ -106,57 +106,57 @@ class _GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
           : FutureBuilder(
               future: _initCameraFuture,
               builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Column(
-              children: [
-                Expanded(
-                  child: _capturedImage == null
-                      ? CameraPreview(_controller!)
-                      : Image.file(
-                          File(_capturedImage!.path),
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: TextField(
-                    controller: _captionController,
-                    decoration: const InputDecoration(
-                      labelText: 'What are you grateful for?',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: null,
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    FloatingActionButton(
-                      heroTag: 'snap',
-                      onPressed: _takePicture,
-                      child: const Icon(Icons.photo_camera),
-                    ),
-                    if (_capturedImage != null)
-                      FilledButton.icon(
-                        onPressed: _isUploading ? null : _submitEntry,
-                        icon: _isUploading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.send),
-                        label: const Text('Save'),
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: _capturedImage == null
+                            ? CameraPreview(_controller!)
+                            : Image.file(
+                                File(_capturedImage!.path),
+                                fit: BoxFit.cover,
+                              ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-              ],
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: TextField(
+                          controller: _captionController,
+                          decoration: const InputDecoration(
+                            labelText: 'What are you grateful for?',
+                            border: OutlineInputBorder(),
+                          ),
+                          maxLines: null,
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'snap',
+                            onPressed: _takePicture,
+                            child: const Icon(Icons.photo_camera),
+                          ),
+                          if (_capturedImage != null)
+                            FilledButton.icon(
+                              onPressed: _isUploading ? null : _submitEntry,
+                              icon: _isUploading
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.send),
+                              label: const Text('Save'),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }
+                return const Center(child: CircularProgressIndicator());
               },
             ),
     );
