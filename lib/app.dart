@@ -6,7 +6,7 @@ import 'screens/gratitude_snap_screen.dart';
 
 /// Root widget with bottom navigation (Timeline ⟷ Snap).
 class ApricityApp extends StatelessWidget {
-  const ApricityApp({Key? key, required this.cameras}) : super(key: key);
+  const ApricityApp({super.key, required this.cameras});
 
   final List<CameraDescription> cameras;
 
@@ -24,7 +24,7 @@ class ApricityApp extends StatelessWidget {
 }
 
 class _MainNav extends StatefulWidget {
-  const _MainNav({super.key, required this.cameras});
+  const _MainNav({required this.cameras});
   final List<CameraDescription> cameras;
 
   @override
