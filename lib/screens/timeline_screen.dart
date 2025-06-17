@@ -21,8 +21,9 @@ class TimelineScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('My Gratitude Journal')),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
             .collection('entries')
-            .where('ownerId', isEqualTo: uid)
             .orderBy('createdAt', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
