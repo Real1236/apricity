@@ -112,29 +112,75 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
+  /// Bottom‑sheet with larger photo & caption
   void _showDayEntries(DateTime day) {
     final key = DateTime.utc(day.year, day.month, day.day);
-    final list = _dayEntries[key] ?? [];
-    if (list.isEmpty) return;
+    final entries = _dayEntries[key] ?? [];
+    if (entries.isEmpty) return;
 
     showModalBottomSheet(
       context: context,
-      builder: (c) => ListView.separated(
-        padding: const EdgeInsets.all(12),
-        itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (_, i) {
-          final data = list[i].data() as Map<String, dynamic>;
-          return ListTile(
-            leading: data['photoUrl'] != null
-                ? CircleAvatar(backgroundImage: NetworkImage(data['photoUrl']))
-                : const CircleAvatar(child: Icon(Icons.image_not_supported)),
-            title: Text(data['caption'] ?? ''),
-            subtitle: Text(
-              (data['createdAt'] as Timestamp?)?.toDate().toString() ?? '',
-            ),
-          );
-        },
+      isScrollControlled: true,
+      builder: (c) => DraggableScrollableSheet(
+        expand: false,
+        builder: (ctx, controller) => ListView.separated(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          itemCount: entries.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (_, i) {
+            final data = entries[i].data() as Map<String, dynamic>;
+            final url = data['photoUrl'] as String?;
+            final caption = data['caption'] as String? ?? '';
+            final ts = (data['createdAt'] as Timestamp?)?.toDate();
+
+            return Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (url != null)
+                    CachedNetworkImage(
+                      imageUrl: url,
+                      height: 220,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const SizedBox(
+                        height: 220,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      errorWidget: (_, __, ___) => const SizedBox(
+                        height: 220,
+                        child: Center(child: Icon(Icons.broken_image)),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          caption,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        if (ts != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${ts.year}/${ts.month.toString().padLeft(2, '0')}/${ts.day.toString().padLeft(2, '0')} ${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
