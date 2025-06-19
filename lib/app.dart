@@ -1,3 +1,4 @@
+import 'package:apricity/screens/calendar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -41,6 +42,7 @@ class _MainNavState extends State<_MainNav> {
     final screens = [
       TimelineScreen(),
       GratitudeSnapScreen(key: _snapKey, primaryCamera: widget.cameras.first),
+      CalendarScreen(),
     ];
 
     return Scaffold(
@@ -57,6 +59,11 @@ class _MainNavState extends State<_MainNav> {
             icon: Icon(Icons.photo_camera_outlined),
             selectedIcon: Icon(Icons.photo_camera),
             label: 'Snap',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Calendar',
           ),
         ],
         onDestinationSelected: (i) {
