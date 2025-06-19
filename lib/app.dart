@@ -36,13 +36,15 @@ class _MainNavState extends State<_MainNav> {
   int _current = 0;
   final GlobalKey<GratitudeSnapScreenState> _snapKey =
       GlobalKey<GratitudeSnapScreenState>();
+  final GlobalKey<CalendarScreenState> _calendarKey =
+      GlobalKey<CalendarScreenState>();
 
   @override
   Widget build(BuildContext context) {
     final screens = [
       TimelineScreen(),
       GratitudeSnapScreen(key: _snapKey, primaryCamera: widget.cameras.first),
-      CalendarScreen(),
+      CalendarScreen(key: _calendarKey),
     ];
 
     return Scaffold(
@@ -68,9 +70,14 @@ class _MainNavState extends State<_MainNav> {
         ],
         onDestinationSelected: (i) {
           if (i == 1 && _current != 1) {
+            // Entering snap screen and starting camera.
             _snapKey.currentState?.startCamera();
           } else if (i != 1 && _current == 1) {
+            // Leaving snap screen and stopping camera.
             _snapKey.currentState?.stopCamera();
+          } else if (i == 2) {
+            // Refreshing calendar when entering.
+            _calendarKey.currentState?.refreshCurrentMonth();
           }
           setState(() => _current = i);
         },

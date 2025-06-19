@@ -11,10 +11,10 @@ class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  State<CalendarScreen> createState() => CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class CalendarScreenState extends State<CalendarScreen> {
   late final String _uid;
   final _dayEntries =
       <DateTime, List<QueryDocumentSnapshot>>{}; // UTC‑date -> entries
@@ -27,6 +27,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _uid = FirebaseAuth.instance.currentUser!.uid;
     _loadMonth(_focused);
   }
+
+  Future<void> refreshCurrentMonth() => _loadMonth(_focused);
 
   Future<void> _loadMonth(DateTime month) async {
     final first = DateTime(month.year, month.month, 1);
