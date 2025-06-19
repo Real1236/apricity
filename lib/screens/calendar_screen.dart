@@ -81,6 +81,7 @@ class CalendarScreenState extends State<CalendarScreen> {
           setState(() => _selected = selected);
           _showDayEntries(selected);
         },
+        headerStyle: HeaderStyle(formatButtonVisible: false),
       ),
     );
   }
