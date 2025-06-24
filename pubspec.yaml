@@ -21,6 +21,7 @@ dependencies:
   path_provider: ^2.1.5
   uuid: ^4.5.1
   cached_network_image: ^3.4.1
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:
