@@ -49,11 +49,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleSignIn() async {
     setState(() => _loading = true);
     final user = await _auth.signInWithGoogle();
-    setState(() => _loading = false);
     if (user != null) {
       widget.onSignedIn();
     } else {
       if (mounted) {
+        setState(() => _loading = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Sign‑in cancelled')));
