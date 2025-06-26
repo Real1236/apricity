@@ -23,15 +23,7 @@ class AuthGate extends StatelessWidget {
         final user = snapshot.data;
         if (user == null) {
           // ───────────── NOT SIGNED IN ─────────────
-          return LoginScreen(
-            onSignedIn: () {
-              // Replace the entire stack with MainNav once login succeeds
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => MainNav(cameras: cameras)),
-              );
-            },
-          );
+          return LoginScreen(onSignedIn: () {});
         } else {
           // ───────────── SIGNED IN ─────────────
           return MainNav(cameras: cameras);

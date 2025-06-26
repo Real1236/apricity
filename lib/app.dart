@@ -1,5 +1,6 @@
 import 'package:apricity/gates/auth_gate.dart';
 import 'package:apricity/screens/calendar_screen.dart';
+import 'package:apricity/widgets/sign_out_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -49,6 +50,7 @@ class _MainNavState extends State<MainNav> {
     ];
 
     return Scaffold(
+      appBar: _buildAppBar(),
       body: IndexedStack(index: _current, children: screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _current,
@@ -85,6 +87,23 @@ class _MainNavState extends State<MainNav> {
           setState(() => _current = i);
         },
       ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    const titles = ['My Gratitude Journal', 'Gratitude Snap', 'Calendar'];
+    return AppBar(
+      title: Text(titles[_current]),
+      actions: [
+        PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'signout') showSignOutDialog(context);
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'signout', child: Text('Sign out')),
+          ],
+        ),
+      ],
     );
   }
 }

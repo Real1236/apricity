@@ -63,7 +63,6 @@ class CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendar')),
       body: TableCalendar(
         firstDay: DateTime.utc(2015, 1, 1),
         lastDay: DateTime.utc(2100, 12, 31),

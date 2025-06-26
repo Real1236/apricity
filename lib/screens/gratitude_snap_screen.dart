@@ -103,7 +103,6 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gratitude Snap')),
       body: _initCameraFuture == null
           ? const Center(child: Text('Camera stopped'))
           : FutureBuilder(
