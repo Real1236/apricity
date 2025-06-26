@@ -12,7 +12,12 @@
           "package_name": "com.arthurchan.apricity"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "874287673860-u7q4iqgn82iop1e26ben1pjggq6lr0kr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDhsvcReQlL4OKFwHypUFTYDSeV7XiYjHk"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874287673860-u7q4iqgn82iop1e26ben1pjggq6lr0kr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "874287673860-c6aeoergclr4c1q8dv70969oj36v77pm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.arthurchan.apricity"
+              }
+            }
+          ]
         }
       }
     }
