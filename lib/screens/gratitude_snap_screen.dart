@@ -21,6 +21,7 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   XFile? _capturedImage;
   final TextEditingController _captionController = TextEditingController();
   bool _isUploading = false;
+  bool _disposed = false;
 
   @override
   void initState() {
@@ -28,7 +29,7 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   }
 
   Future<void> startCamera() async {
-    if (_controller != null) return;
+    if (_disposed || _controller != null) return;
     final controller = CameraController(
       widget.primaryCamera,
       ResolutionPreset.medium,
@@ -40,6 +41,7 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   }
 
   Future<void> stopCamera() async {
+    if (_disposed || _controller != null) return;
     if (_controller == null) return;
     await _controller!.dispose();
     _controller = null;
@@ -50,6 +52,7 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   @override
   void dispose() {
     stopCamera();
+    _disposed = true;
     _captionController.dispose();
     super.dispose();
   }
@@ -100,7 +103,6 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Gratitude Snap')),
       body: _initCameraFuture == null
           ? const Center(child: Text('Camera stopped'))
           : FutureBuilder(

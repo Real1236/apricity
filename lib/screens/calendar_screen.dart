@@ -43,6 +43,8 @@ class CalendarScreenState extends State<CalendarScreen> {
         .orderBy('createdAt')
         .get();
 
+    if (!mounted) return;
+
     final map = <DateTime, List<QueryDocumentSnapshot>>{};
     for (var doc in snap.docs) {
       final ts = (doc['createdAt'] as Timestamp?)?.toDate();
@@ -61,7 +63,6 @@ class CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendar')),
       body: TableCalendar(
         firstDay: DateTime.utc(2015, 1, 1),
         lastDay: DateTime.utc(2100, 12, 31),
