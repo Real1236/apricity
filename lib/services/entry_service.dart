@@ -43,5 +43,54 @@ class EntryService {
 
     // 3️⃣ Back-patch Firestore with the real URL
     await entryRef.update({'photoUrl': downloadUrl});
+
+    // 4️⃣ Update streak counters
+    await _updateStreak(uid);
+  }
+
+  /// Transaction that recalculates `currentStreak`, `longestStreak`,
+  /// and `lastEntryDate` based on _today_ in UTC.
+  Future<void> _updateStreak(String uid) async {
+    final userRef = _db.collection('users').doc(uid);
+
+    await _db.runTransaction((tx) async {
+      final now = DateTime.now().toUtc();
+      final todayKey =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      final snap = await tx.get(userRef);
+      final data = snap.data() ?? {};
+
+      int current = (data['currentStreak'] ?? 0) as int;
+      int longest = (data['longestStreak'] ?? 0) as int;
+      final lastDateStr = data['lastEntryDate'] as String?;
+
+      // Determine streak logic.
+      if (lastDateStr == todayKey) {
+        // Already counted today – nothing to change.
+        return;
+      }
+
+      if (lastDateStr != null) {
+        final parts = lastDateStr.split('-').map(int.parse).toList();
+        final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
+        final diff = now.difference(lastDate).inDays;
+        if (diff == 1) {
+          current += 1; // continued streak
+        } else {
+          current = 1; // reset
+        }
+      } else {
+        current = 1; // very first entry
+      }
+
+      if (current > longest) longest = current;
+
+      tx.set(userRef, {
+        'currentStreak': current,
+        'longestStreak': longest,
+        'lastEntryDate': todayKey,
+      }, SetOptions(merge: true));
+    });
   }
 }
