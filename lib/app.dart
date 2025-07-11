@@ -1,6 +1,9 @@
 import 'package:apricity/gates/auth_gate.dart';
 import 'package:apricity/screens/calendar_screen.dart';
 import 'package:apricity/widgets/sign_out_dialog.dart';
+import 'package:apricity/widgets/streak_badge.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
@@ -92,9 +95,27 @@ class _MainNavState extends State<MainNav> {
 
   PreferredSizeWidget _buildAppBar() {
     const titles = ['My Gratitude Journal', 'Gratitude Snap', 'Calendar'];
+
+    Widget? streakWidget;
+    if (_current == 0) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      streakWidget = StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance.doc('users/$uid').snapshots(),
+        builder: (_, userSnap) {
+          final int streak =
+              (userSnap.data?.data()?['currentStreak'] ?? 0) as int;
+          return Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: StreakBadge(streak: streak),
+          );
+        },
+      );
+    }
+
     return AppBar(
       title: Text(titles[_current]),
       actions: [
+        if (streakWidget != null) streakWidget,
         PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'signout') showSignOutDialog(context);
