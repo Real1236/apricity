@@ -50,6 +50,7 @@ class EntryService {
 
   /// Transaction that recalculates `currentStreak`, `longestStreak`,
   /// and `lastEntryDate` based on _today_ in UTC.
+  /// TODO: Fix bug - doesn't break streak if no entry for a day.
   Future<void> _updateStreak(String uid) async {
     final userRef = _db.collection('users').doc(uid);
 
