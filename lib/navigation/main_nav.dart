@@ -10,6 +10,26 @@ import 'package:flutter/material.dart';
 
 enum AppTab { timeline, snap, calendar }
 
+class TabScreen {
+  const TabScreen({
+    required this.title,
+    required this.icon,
+    required this.selectedIcon,
+    required this.build,
+    this.onEnter,
+    this.onLeave,
+    this.showStreak = false,
+  });
+
+  final String title;
+  final Icon icon;
+  final Icon selectedIcon;
+  final Widget Function() build;
+  final VoidCallback? onEnter;
+  final VoidCallback? onLeave;
+  final bool showStreak;
+}
+
 class MainNav extends StatefulWidget {
   const MainNav({super.key, required this.cameras});
   final List<CameraDescription> cameras;
@@ -22,7 +42,8 @@ class _MainNavState extends State<MainNav> {
   late final GlobalKey<GratitudeSnapScreenState> _snapKey;
   late final GlobalKey<CalendarScreenState> _calendarKey;
 
-  late final List<TabScreen> _tabs;
+  late final Map<AppTab, TabScreen> _tabMap;
+  late final List<AppTab> _tabsInOrder;
   AppTab _current = AppTab.timeline;
 
   @override
@@ -31,14 +52,15 @@ class _MainNavState extends State<MainNav> {
     _snapKey = GlobalKey<GratitudeSnapScreenState>();
     _calendarKey = GlobalKey<CalendarScreenState>();
 
-    _tabs = [
-      TabScreen(
+    _tabMap = {
+      AppTab.timeline: TabScreen(
         title: 'My Gratitude Journal',
         icon: const Icon(Icons.home_outlined),
         selectedIcon: const Icon(Icons.home),
         build: () => const TimelineScreen(),
+        showStreak: true,
       ),
-      TabScreen(
+      AppTab.snap: TabScreen(
         title: 'Gratitude Snap',
         icon: const Icon(Icons.photo_camera_outlined),
         selectedIcon: const Icon(Icons.photo_camera),
@@ -49,14 +71,16 @@ class _MainNavState extends State<MainNav> {
         onEnter: () => _snapKey.currentState?.startCamera(),
         onLeave: () => _snapKey.currentState?.stopCamera(),
       ),
-      TabScreen(
+      AppTab.calendar: TabScreen(
         title: 'Calendar',
         icon: const Icon(Icons.calendar_today_outlined),
         selectedIcon: const Icon(Icons.calendar_today),
         build: () => CalendarScreen(key: _calendarKey),
         onEnter: () => _calendarKey.currentState?.refreshCurrentMonth(),
       ),
-    ];
+    };
+
+    _tabsInOrder = [AppTab.timeline, AppTab.snap, AppTab.calendar];
   }
 
   @override
@@ -64,59 +88,58 @@ class _MainNavState extends State<MainNav> {
     return Scaffold(
       appBar: _buildAppBar(),
       body: IndexedStack(
-        index: _current.index,
-        children: _tabs.map((t) => t.build()).toList(),
+        index: _tabsInOrder.indexOf(_current),
+        children: _tabsInOrder.map((t) => _tabMap[t]!.build()).toList(),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _current.index,
-        destinations: _tabs
+        selectedIndex: _tabsInOrder.indexOf(_current),
+        destinations: _tabsInOrder
             .map(
               (t) => NavigationDestination(
-                icon: t.icon,
-                selectedIcon: t.selectedIcon,
-                label: t.title.split(' ').first,
+                icon: _tabMap[t]!.icon,
+                selectedIcon: _tabMap[t]!.selectedIcon,
+                label: _tabMap[t]!.title.split(' ').first,
               ),
             )
             .toList(),
-        onDestinationSelected: _onTabSelected,
+        onDestinationSelected: _onTabTap,
       ),
     );
   }
 
-  void _onTabSelected(int newIndex) {
-    final next = AppTab.values[newIndex];
+  /* ---------------- handle taps without coupling ---------------- */
+  void _onTabTap(int index) {
+    final next = _tabsInOrder[index];
     if (next == _current) return;
 
-    _tabs[_current.index].onLeave?.call();
-    _tabs[newIndex].onEnter?.call();
+    _tabMap[_current]!.onLeave?.call();
+    _tabMap[next]!.onEnter?.call();
 
     setState(() => _current = next);
   }
 
-  /// Same streak-aware AppBar as before, but reads data from _tabs[_current].
+  /* ---------------- custom AppBar ---------------- */
   PreferredSizeWidget _buildAppBar() {
-    final currentTab = _tabs[_current.index];
-
-    Widget? streakWidget;
-    if (_current == AppTab.timeline) {
+    final cfg = _tabMap[_current]!;
+    Widget? streak;
+    if (cfg.showStreak) {
       final uid = FirebaseAuth.instance.currentUser!.uid;
-      streakWidget = StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      streak = StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.doc('users/$uid').snapshots(),
-        builder: (_, userSnap) {
-          final int streak =
-              (userSnap.data?.data()?['currentStreak'] ?? 0) as int;
+        builder: (_, s) {
+          final streakNum = (s.data!.data()?['currentStreak'] ?? 0) as int;
           return Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: StreakBadge(streak: streak),
+            padding: const EdgeInsets.only(right: 12),
+            child: StreakBadge(streak: streakNum),
           );
         },
       );
     }
 
     return AppBar(
-      title: Text(currentTab.title),
+      title: Text(cfg.title),
       actions: [
-        if (streakWidget != null) streakWidget,
+        if (streak != null) streak,
         PopupMenuButton<String>(
           onSelected: (v) {
             if (v == 'signout') showSignOutDialog(context);
@@ -128,24 +151,4 @@ class _MainNavState extends State<MainNav> {
       ],
     );
   }
-}
-
-class TabScreen {
-  const TabScreen({
-    required this.title,
-    required this.icon,
-    required this.selectedIcon,
-    required this.build,
-    this.onEnter,
-    this.onLeave,
-  });
-
-  final String title;
-  final Icon icon;
-  final Icon selectedIcon;
-  final Widget Function() build;
-
-  /// Optional hooks for things like starting/stopping the camera.
-  final VoidCallback? onEnter;
-  final VoidCallback? onLeave;
 }
