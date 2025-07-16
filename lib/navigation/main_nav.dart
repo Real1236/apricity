@@ -127,7 +127,7 @@ class _MainNavState extends State<MainNav> {
       streak = StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance.doc('users/$uid').snapshots(),
         builder: (_, s) {
-          final streakNum = (s.data!.data()?['currentStreak'] ?? 0) as int;
+          final streakNum = (s.data?.data()?['currentStreak'] ?? 0) as int;
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: StreakBadge(streak: streakNum),

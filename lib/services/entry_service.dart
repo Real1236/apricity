@@ -66,23 +66,22 @@ class EntryService {
       int longest = (data['longestStreak'] ?? 0) as int;
       final lastDateStr = data['lastEntryDate'] as String?;
 
-      // Determine streak logic.
       if (lastDateStr == todayKey) {
-        // Already counted today – nothing to change.
         return;
       }
 
       if (lastDateStr != null) {
+        // TODO: Handle case where last entry was more than 1 day ago
         final parts = lastDateStr.split('-').map(int.parse).toList();
         final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
         final diff = now.difference(lastDate).inDays;
         if (diff == 1) {
-          current += 1; // continued streak
+          current += 1;
         } else {
-          current = 1; // reset
+          current = 1;
         }
       } else {
-        current = 1; // very first entry
+        current = 1;
       }
 
       if (current > longest) longest = current;
