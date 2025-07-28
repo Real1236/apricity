@@ -46,7 +46,7 @@ class TimelineScreen extends StatelessWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final data = docs[index].data();
               return EntryCard(
@@ -95,7 +95,7 @@ class EntryCard extends StatelessWidget {
                 aspectRatio: 4 / 3,
                 child: Center(child: CircularProgressIndicator()),
               ),
-              errorWidget: (c, _, __) =>
+              errorWidget: (c, _, _) =>
                   const Icon(Icons.broken_image, size: 48),
             ),
           Padding(

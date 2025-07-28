@@ -1,8 +1,8 @@
+import 'package:apricity/navigation/main_nav.dart';
 import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../screens/login_screen.dart';
-import '../app.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key, required this.cameras});

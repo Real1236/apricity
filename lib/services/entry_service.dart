@@ -65,9 +65,7 @@ class EntryService {
       int longest = (data['longestStreak'] ?? 0) as int;
       final lastDateStr = data['lastEntryDate'] as String?;
 
-      // Determine streak logic.
       if (lastDateStr == todayKey) {
-        // Already counted today – nothing to change.
         return;
       }
 
@@ -76,12 +74,12 @@ class EntryService {
         final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
         final diff = now.difference(lastDate).inDays;
         if (diff == 1) {
-          current += 1; // continued streak
+          current += 1;
         } else {
-          current = 1; // reset
+          current = 1;
         }
       } else {
-        current = 1; // very first entry
+        current = 1;
       }
 
       if (current > longest) longest = current;
@@ -92,5 +90,36 @@ class EntryService {
         'lastEntryDate': todayKey,
       }, SetOptions(merge: true));
     });
+  }
+
+  Future<int> checkStreak(String uid) async {
+    final now = DateTime.now().toUtc();
+    final todayKey =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    final userRef = _db.collection('users').doc(uid);
+    final snap = await userRef.get();
+    final data = snap.data() ?? {};
+
+    int current = (data['currentStreak'] ?? 0) as int;
+    final lastDateStr = data['lastEntryDate'] as String?;
+
+    if (lastDateStr == todayKey) {
+      return current;
+    }
+
+    if (lastDateStr != null) {
+      final parts = lastDateStr.split('-').map(int.parse).toList();
+      final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
+      final diff = now.difference(lastDate).inDays;
+      if (diff == 1) {
+        return current;
+      } else {
+        final DocumentReference userRef = _db.collection('users').doc(uid);
+        await userRef.update({'currentStreak': 0});
+      }
+    }
+
+    return 0;
   }
 }

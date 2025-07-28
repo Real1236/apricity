@@ -103,7 +103,7 @@ class CalendarScreenState extends State<CalendarScreen> {
           ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(4),
           ),
           padding: const EdgeInsets.all(2),
@@ -131,7 +131,7 @@ class CalendarScreenState extends State<CalendarScreen> {
           controller: controller,
           padding: const EdgeInsets.all(16),
           itemCount: entries.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          separatorBuilder: (_, _) => const SizedBox(height: 16),
           itemBuilder: (_, i) {
             final data = entries[i].data() as Map<String, dynamic>;
             final url = data['photoUrl'] as String?;
@@ -151,11 +151,11 @@ class CalendarScreenState extends State<CalendarScreen> {
                       imageUrl: url,
                       height: 220,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) => const SizedBox(
+                      placeholder: (_, _) => const SizedBox(
                         height: 220,
                         child: Center(child: CircularProgressIndicator()),
                       ),
-                      errorWidget: (_, __, ___) => const SizedBox(
+                      errorWidget: (_, _, _) => const SizedBox(
                         height: 220,
                         child: Center(child: Icon(Icons.broken_image)),
                       ),

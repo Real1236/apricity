@@ -41,8 +41,7 @@ class GratitudeSnapScreenState extends State<GratitudeSnapScreen> {
   }
 
   Future<void> stopCamera() async {
-    if (_disposed || _controller != null) return;
-    if (_controller == null) return;
+    if (_disposed || _controller == null) return;
     await _controller!.dispose();
     _controller = null;
     _initCameraFuture = null;
