@@ -1,6 +1,7 @@
 import 'package:apricity/screens/calendar_screen.dart';
 import 'package:apricity/screens/gratitude_snap_screen.dart';
 import 'package:apricity/screens/timeline_screen.dart';
+import 'package:apricity/services/entry_service.dart';
 import 'package:apricity/widgets/sign_out_dialog.dart';
 import 'package:apricity/widgets/streak_badge.dart';
 import 'package:camera/camera.dart';
@@ -59,6 +60,8 @@ class _MainNavState extends State<MainNav> {
         selectedIcon: const Icon(Icons.home),
         build: () => const TimelineScreen(),
         showStreak: true,
+        onEnter: () =>
+            EntryService().checkStreak(FirebaseAuth.instance.currentUser!.uid),
       ),
       AppTab.snap: TabScreen(
         title: 'Gratitude Snap',

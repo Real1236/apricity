@@ -50,7 +50,6 @@ class EntryService {
 
   /// Transaction that recalculates `currentStreak`, `longestStreak`,
   /// and `lastEntryDate` based on _today_ in UTC.
-  /// TODO: Fix bug - doesn't break streak if no entry for a day.
   Future<void> _updateStreak(String uid) async {
     final userRef = _db.collection('users').doc(uid);
 
@@ -71,7 +70,6 @@ class EntryService {
       }
 
       if (lastDateStr != null) {
-        // TODO: Handle case where last entry was more than 1 day ago
         final parts = lastDateStr.split('-').map(int.parse).toList();
         final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
         final diff = now.difference(lastDate).inDays;
@@ -92,5 +90,36 @@ class EntryService {
         'lastEntryDate': todayKey,
       }, SetOptions(merge: true));
     });
+  }
+
+  Future<int> checkStreak(String uid) async {
+    final now = DateTime.now().toUtc();
+    final todayKey =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    final userRef = _db.collection('users').doc(uid);
+    final snap = await userRef.get();
+    final data = snap.data() ?? {};
+
+    int current = (data['currentStreak'] ?? 0) as int;
+    final lastDateStr = data['lastEntryDate'] as String?;
+
+    if (lastDateStr == todayKey) {
+      return current;
+    }
+
+    if (lastDateStr != null) {
+      final parts = lastDateStr.split('-').map(int.parse).toList();
+      final lastDate = DateTime.utc(parts[0], parts[1], parts[2]);
+      final diff = now.difference(lastDate).inDays;
+      if (diff == 1) {
+        return current;
+      } else {
+        final DocumentReference userRef = _db.collection('users').doc(uid);
+        await userRef.update({'currentStreak': 0});
+      }
+    }
+
+    return 0;
   }
 }
