@@ -10,7 +10,7 @@ class AuthService {
   Future<User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User cancelled the sign-in
+      if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
@@ -25,20 +25,59 @@ class AuthService {
       final User? user = userCredential.user;
       if (user == null) return null;
 
-      final doc = _db.collection('users').doc(user.uid);
-      await doc.set({
-        'currentStreak': 0,
-        'longestStreak': 0,
-        'lastEntryDate': null,
-        'displayName': user.displayName,
-        'photoUrl': user.photoURL,
-      }, SetOptions(merge: true));
+      final doc = await _db.collection('users').doc(user.uid).get();
+
+      if (!doc.exists) {
+        await _db.collection('users').doc(user.uid).set({
+          'currentStreak': 0,
+          'longestStreak': 0,
+          'lastEntryDate': null,
+          'displayName': null,
+          'photoUrl': user.photoURL,
+          'profileComplete': false,
+        });
+      }
 
       return user;
     } catch (e) {
-      // TODO: Implement logging
       print("Error signing in with Google: $e");
       return null;
+    }
+  }
+
+  Future<bool> completeProfile(String displayName) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return false;
+
+    try {
+      // Use batch to ensure both operations succeed or fail together
+      final batch = _db.batch();
+
+      batch.update(_db.collection('users').doc(user.uid), {
+        'displayName': displayName,
+        'profileComplete': true,
+      });
+
+      batch.set(_db.collection('usernames').doc(displayName), {
+        'uid': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      print("Error completing profile: $e");
+      return false;
+    }
+  }
+
+  Future<bool> isUsernameAvailable(String username) async {
+    try {
+      final doc = await _db.collection('usernames').doc(username).get();
+      return !doc.exists;
+    } catch (e) {
+      print("Error checking username: $e");
+      return false;
     }
   }
 
