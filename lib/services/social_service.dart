@@ -3,24 +3,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class SocialService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final String _currentUid = FirebaseAuth.instance.currentUser!.uid;
 
-  Future<void> follow(String targetUid) async {
-    String myUid = FirebaseAuth.instance.currentUser!.uid;
-    await _db.doc('users/$myUid/following/$targetUid').set({});
-    await _db.doc('users/$targetUid/followers/$myUid').set({});
-  }
+  Future<void> sendFriendRequest(String targetUsername) async {
+    final currentUserDoc = await _db.collection('users').doc(_currentUid).get();
+    final String currentUsername = currentUserDoc.data()!['displayName'];
 
-  Future<void> unfollow(String targetUid) async {
-    String myUid = FirebaseAuth.instance.currentUser!.uid;
-    await _db.doc('users/$myUid/following/$targetUid').delete();
-    await _db.doc('users/$targetUid/followers/$myUid').delete();
-  }
+    final String uLow = currentUsername.compareTo(targetUsername) < 0
+        ? currentUsername
+        : targetUsername;
+    final String uHigh = currentUsername.compareTo(targetUsername) < 0
+        ? targetUsername
+        : currentUsername;
+    final String pairId = '${uLow}_$uHigh';
 
-  Stream<bool> isFollowing(String targetUid) {
-    String myUid = FirebaseAuth.instance.currentUser!.uid;
-    return _db
-        .doc('users/$myUid/following/$targetUid')
-        .snapshots()
-        .map((snapshot) => snapshot.exists);
+    _db.collection('friend_requests').doc(pairId).set({
+      'from': currentUsername,
+      'to': targetUsername,
+      'uLow': uLow,
+      'uHigh': uHigh,
+      'uid': _currentUid,
+      'status': 'pending',
+    });
   }
 }

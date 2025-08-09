@@ -1,3 +1,4 @@
+import 'package:apricity/services/social_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -73,21 +74,13 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future<void> _sendFriendRequest(String targetUid, String displayName) async {
+  Future<void> _sendFriendRequest(String targetUsername) async {
     try {
-      // Add to current user's sent requests
-      await _db.collection('users').doc(_currentUid).update({
-        'sentRequests': FieldValue.arrayUnion([targetUid]),
-      });
-
-      // Add to target user's received requests
-      await _db.collection('users').doc(targetUid).update({
-        'receivedRequests': FieldValue.arrayUnion([_currentUid]),
-      });
+      await SocialService().sendFriendRequest(targetUsername);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Friend request sent to $displayName')),
+          SnackBar(content: Text('Friend request sent to $targetUsername')),
         );
       }
     } catch (e) {
@@ -245,7 +238,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildActionButton(
-    String targetUid,
+    String targetUsername,
     String displayName,
     bool isAlreadyFriend,
     bool isRequestSent,
@@ -267,7 +260,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return ElevatedButton(
-      onPressed: () => _sendFriendRequest(targetUid, displayName),
+      onPressed: () => _sendFriendRequest(targetUsername),
       child: const Text('Add Friend'),
     );
   }
