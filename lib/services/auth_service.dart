@@ -58,9 +58,10 @@ class AuthService {
         'profileComplete': true,
       });
 
-      batch.set(_db.collection('usernames').doc(displayName), {
+      batch.set(_db.collection('profiles').doc(displayName.toLowerCase()), {
         'uid': user.uid,
         'createdAt': FieldValue.serverTimestamp(),
+        'photoUrl': user.photoURL,
       });
 
       await batch.commit();
@@ -73,7 +74,10 @@ class AuthService {
 
   Future<bool> isUsernameAvailable(String username) async {
     try {
-      final doc = await _db.collection('usernames').doc(username).get();
+      final doc = await _db
+          .collection('profiles')
+          .doc(username.toLowerCase())
+          .get();
       return !doc.exists;
     } catch (e) {
       print("Error checking username: $e");
