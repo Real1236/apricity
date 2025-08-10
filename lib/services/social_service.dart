@@ -5,25 +5,24 @@ class SocialService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final String _currentUid = FirebaseAuth.instance.currentUser!.uid;
 
-  Future<void> sendFriendRequest(String targetUsername) async {
-    final currentUserDoc = await _db.collection('users').doc(_currentUid).get();
-    final String currentUsername = currentUserDoc.data()!['displayName'];
-
-    final String uLow = currentUsername.compareTo(targetUsername) < 0
-        ? currentUsername
-        : targetUsername;
-    final String uHigh = currentUsername.compareTo(targetUsername) < 0
-        ? targetUsername
-        : currentUsername;
-    final String pairId = '${uLow}_$uHigh';
-
-    _db.collection('friend_requests').doc(pairId).set({
-      'from': currentUsername,
-      'to': targetUsername,
-      'uLow': uLow,
-      'uHigh': uHigh,
+  Future<void> sendFriendRequest(
+    String targetUid,
+    String targetUsername,
+  ) async {
+    final String pairId = createPairId(targetUid, _currentUid);
+    await _db.collection('friend_requests').doc(pairId).set({
+      'from': _currentUid,
+      'to': targetUid,
+      'uLow': pairId.split('~').first,
+      'uHigh': pairId.split('~').last,
       'uid': _currentUid,
       'status': 'pending',
     });
+  }
+
+  String createPairId(String uid1, String uid2) {
+    final uLow = uid1.compareTo(uid2) < 0 ? uid1 : uid2;
+    final uHigh = uid1.compareTo(uid2) < 0 ? uid2 : uid1;
+    return '$uLow~$uHigh';
   }
 }

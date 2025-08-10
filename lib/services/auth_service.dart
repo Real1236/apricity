@@ -46,6 +46,13 @@ class AuthService {
   }
 
   Future<bool> completeProfile(String displayName) async {
+    if (displayName.isEmpty ||
+        displayName.length < 3 ||
+        !RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(displayName)) {
+      print("Invalid display name: $displayName");
+      return false;
+    }
+
     final user = _firebaseAuth.currentUser;
     if (user == null) return false;
 

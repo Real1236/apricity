@@ -74,9 +74,12 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future<void> _sendFriendRequest(String targetUsername) async {
+  Future<void> _sendFriendRequest(
+    String targetUid,
+    String targetUsername,
+  ) async {
     try {
-      await SocialService().sendFriendRequest(targetUsername);
+      await SocialService().sendFriendRequest(targetUid, targetUsername);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,20 +196,18 @@ class _SearchScreenState extends State<SearchScreen> {
         final displayName = userDoc.id;
         final photoUrl = userData['photoUrl'] as String?;
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: _db.collection('users').doc(_currentUid).get(),
-          builder: (context, snapshot) {
-            final currentUserData =
-                snapshot.data?.data() as Map<String, dynamic>?;
-            final sentRequests = List<String>.from(
-              currentUserData?['sentRequests'] ?? [],
-            );
-            final friends = List<String>.from(
-              currentUserData?['friends'] ?? [],
-            );
+        final String pairId = SocialService().createPairId(
+          _currentUid,
+          userData['uid'],
+        );
 
-            final isAlreadyFriend = friends.contains(userDoc.id);
-            final isRequestSent = sentRequests.contains(userDoc.id);
+        return FutureBuilder<DocumentSnapshot>(
+          future: _db.collection('friend_requests').doc(pairId).get(),
+          builder: (context, snapshot) {
+            final requestData = snapshot.data?.data() as Map<String, dynamic>?;
+
+            final isAlreadyFriend = requestData?['status'] == 'accepted';
+            final isRequestSent = requestData?['status'] == 'pending';
 
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
@@ -224,7 +225,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 title: Text(displayName),
                 trailing: _buildActionButton(
-                  userDoc.id,
+                  userData['uid'],
                   displayName,
                   isAlreadyFriend,
                   isRequestSent,
@@ -238,8 +239,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildActionButton(
+    String targetUid,
     String targetUsername,
-    String displayName,
     bool isAlreadyFriend,
     bool isRequestSent,
   ) {
@@ -260,7 +261,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return ElevatedButton(
-      onPressed: () => _sendFriendRequest(targetUsername),
+      onPressed: () => _sendFriendRequest(targetUid, targetUsername),
       child: const Text('Add Friend'),
     );
   }
