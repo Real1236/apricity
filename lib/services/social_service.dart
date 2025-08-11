@@ -35,4 +35,10 @@ class SocialService {
         .limit(10)
         .get();
   }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> getFriendRequestDoc(
+    String pairId,
+  ) async {
+    return _db.collection('friend_requests').doc(pairId).get();
+  }
 }

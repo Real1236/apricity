@@ -12,7 +12,6 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
   final String _currentUid = FirebaseAuth.instance.currentUser!.uid;
 
   List<DocumentSnapshot> _searchResults = [];
@@ -198,7 +197,7 @@ class _SearchScreenState extends State<SearchScreen> {
         );
 
         return FutureBuilder<DocumentSnapshot>(
-          future: _db.collection('friend_requests').doc(pairId).get(),
+          future: SocialService().getFriendRequestDoc(pairId),
           builder: (context, snapshot) {
             final requestData = snapshot.data?.data() as Map<String, dynamic>?;
 
