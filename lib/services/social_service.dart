@@ -25,4 +25,14 @@ class SocialService {
     final uHigh = uid1.compareTo(uid2) < 0 ? uid2 : uid1;
     return '$uLow~$uHigh';
   }
+
+  Future<QuerySnapshot> searchUsers(String query) async {
+    return await _db
+        .collection('profiles')
+        .orderBy(FieldPath.documentId)
+        .startAt([query.toLowerCase()])
+        .endAt(['${query.toLowerCase()}\uf8ff'])
+        .limit(10)
+        .get();
+  }
 }

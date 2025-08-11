@@ -40,13 +40,9 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final QuerySnapshot profileSnapshot = await _db
-          .collection('profiles')
-          .orderBy(FieldPath.documentId)
-          .startAt([query.toLowerCase()])
-          .endAt(['${query.toLowerCase()}\uf8ff'])
-          .limit(10)
-          .get();
+      final QuerySnapshot profileSnapshot = await SocialService().searchUsers(
+        query,
+      );
 
       // Get user documents for matching usernames
       final List<DocumentSnapshot> userDocs = [];
