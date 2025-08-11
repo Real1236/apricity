@@ -90,6 +90,18 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  Future<void> _acceptFriendRequest(String targetUid) async {
+    try {
+      await SocialService().acceptFriendRequest(targetUid);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to accept request: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -202,7 +214,17 @@ class _SearchScreenState extends State<SearchScreen> {
             final requestData = snapshot.data?.data() as Map<String, dynamic>?;
 
             final isAlreadyFriend = requestData?['status'] == 'accepted';
-            final isRequestSent = requestData?['status'] == 'pending';
+            bool isRequestSent = false;
+            bool isRequestReceived = false;
+            if (requestData?['status'] == 'pending') {
+              if (requestData?['from'] == _currentUid) {
+                isRequestSent = true;
+                isRequestReceived = false;
+              } else {
+                isRequestSent = false;
+                isRequestReceived = true;
+              }
+            }
 
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
@@ -224,6 +246,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   displayName,
                   isAlreadyFriend,
                   isRequestSent,
+                  isRequestReceived,
                 ),
               ),
             );
@@ -238,6 +261,7 @@ class _SearchScreenState extends State<SearchScreen> {
     String targetUsername,
     bool isAlreadyFriend,
     bool isRequestSent,
+    bool isRequestReceived,
   ) {
     if (isAlreadyFriend) {
       return const Chip(
@@ -252,6 +276,13 @@ class _SearchScreenState extends State<SearchScreen> {
         label: Text('Pending'),
         backgroundColor: Colors.orange,
         labelStyle: TextStyle(color: Colors.white),
+      );
+    }
+
+    if (isRequestReceived) {
+      return ElevatedButton(
+        onPressed: () => _acceptFriendRequest(targetUid),
+        child: const Text('Accept Friend Request'),
       );
     }
 

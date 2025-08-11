@@ -41,4 +41,13 @@ class SocialService {
   ) async {
     return _db.collection('friend_requests').doc(pairId).get();
   }
+
+  Future<void> acceptFriendRequest(String targetUid) async {
+    final String pairId = createPairId(targetUid, _currentUid);
+    await _db.collection('friend_requests').doc(pairId).update({
+      'status': 'accepted',
+    });
+
+    // TODO: Create friends list
+  }
 }
