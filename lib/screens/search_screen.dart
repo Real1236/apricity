@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:apricity/services/social_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,13 +14,33 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final String _currentUid = FirebaseAuth.instance.currentUser!.uid;
+  final _service = SocialService();
 
+  // UI state
   List<DocumentSnapshot> _searchResults = [];
   bool _isSearching = false;
   String _searchQuery = '';
 
+  // Relationship state
+  RelationshipState _rel = const RelationshipState(
+    friends: {},
+    outgoingPending: {},
+    incomingPending: {},
+  );
+  StreamSubscription<RelationshipState>? _relSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _relSub = _service.watchRelationshipState(_currentUid).listen((state) {
+      if (!mounted) return;
+      setState(() => _rel = state);
+    });
+  }
+
   @override
   void dispose() {
+    _relSub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -29,6 +50,7 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _searchQuery = '';
       });
       return;
     }
@@ -39,33 +61,26 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final QuerySnapshot profileSnapshot = await SocialService().searchUsers(
-        query,
-      );
+      final snap = await _service.searchUsers(query);
 
-      // Get user documents for matching usernames
-      final List<DocumentSnapshot> userDocs = [];
-      for (final profileDoc in profileSnapshot.docs) {
-        final uid = profileDoc.data() as Map<String, dynamic>;
-        if (uid['uid'] == _currentUid) {
-          continue;
-        }
-        userDocs.add(profileDoc);
+      final filtered = <DocumentSnapshot>[];
+      for (final d in snap.docs) {
+        final data = d.data() as Map<String, dynamic>;
+        if (data['uid'] == _currentUid) continue;
+        filtered.add(d);
       }
 
+      if (!mounted) return;
       setState(() {
-        _searchResults = userDocs;
+        _searchResults = filtered;
         _isSearching = false;
       });
     } catch (e) {
-      setState(() {
-        _isSearching = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Search failed: $e')));
-      }
+      if (!mounted) return;
+      setState(() => _isSearching = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Search failed: $e')));
     }
   }
 
@@ -74,31 +89,44 @@ class _SearchScreenState extends State<SearchScreen> {
     String targetUsername,
   ) async {
     try {
-      await SocialService().sendFriendRequest(targetUid, targetUsername);
-
+      await _service.sendFriendRequest(targetUid, targetUsername);
+      // optimistic UI
+      setState(
+        () => _rel = RelationshipState(
+          friends: _rel.friends,
+          outgoingPending: {..._rel.outgoingPending, targetUid},
+          incomingPending: _rel.incomingPending,
+        ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Friend request sent to $targetUsername')),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to send request: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send request: $e')));
     }
   }
 
-  Future<void> _acceptFriendRequest(String targetUid) async {
+  Future<void> _acceptFriendRequest(String otherUid) async {
     try {
-      await SocialService().acceptFriendRequest(targetUid);
+      await _service.acceptFriendRequest(otherUid);
+      // optimistic UI; CF will add edges shortly
+      setState(
+        () => _rel = RelationshipState(
+          friends: {..._rel.friends, otherUid},
+          outgoingPending: _rel.outgoingPending,
+          incomingPending: {..._rel.incomingPending}..remove(otherUid),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to accept request: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to accept request: $e')));
     }
   }
 
@@ -111,7 +139,6 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       body: Column(
         children: [
-          // Search bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -137,8 +164,6 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: _searchUsers,
             ),
           ),
-
-          // Search results
           Expanded(child: _buildSearchResults()),
         ],
       ),
@@ -147,50 +172,20 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSearchResults() {
     if (_searchQuery.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Search for people to add as friends',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
+      return _EmptyHint(
+        icon: Icons.search,
+        text: 'Search for people to add as friends',
+        color: Theme.of(context).colorScheme.outline,
       );
     }
 
-    if (_isSearching) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (_isSearching) return const Center(child: CircularProgressIndicator());
 
     if (_searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_search,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No users found for "$_searchQuery"',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
+      return _EmptyHint(
+        icon: Icons.person_search,
+        text: 'No users found for "$_searchQuery"',
+        color: Theme.of(context).colorScheme.outline,
       );
     }
 
@@ -198,59 +193,37 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
-        final userDoc = _searchResults[index];
-        final userData = userDoc.data() as Map<String, dynamic>;
-        final displayName = userDoc.id;
-        final photoUrl = userData['photoUrl'] as String?;
+        final profileDoc = _searchResults[index];
+        final data = profileDoc.data() as Map<String, dynamic>;
+        final targetUid = data['uid'] as String;
+        final displayName = profileDoc.id;
+        final photoUrl = data['photoUrl'] as String?;
 
-        final String pairId = SocialService().createPairId(
-          _currentUid,
-          userData['uid'],
-        );
+        final isFriend = _rel.friends.contains(targetUid);
+        final isRequestSent = _rel.outgoingPending.contains(targetUid);
+        final isRequestReceived = _rel.incomingPending.contains(targetUid);
 
-        return FutureBuilder<DocumentSnapshot>(
-          future: SocialService().getFriendRequestDoc(pairId),
-          builder: (context, snapshot) {
-            final requestData = snapshot.data?.data() as Map<String, dynamic>?;
-
-            final isAlreadyFriend = requestData?['status'] == 'accepted';
-            bool isRequestSent = false;
-            bool isRequestReceived = false;
-            if (requestData?['status'] == 'pending') {
-              if (requestData?['from'] == _currentUid) {
-                isRequestSent = true;
-                isRequestReceived = false;
-              } else {
-                isRequestSent = false;
-                isRequestReceived = true;
-              }
-            }
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: photoUrl != null
-                      ? NetworkImage(photoUrl)
-                      : null,
-                  child: photoUrl == null
-                      ? Text(
-                          displayName[0].toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      : null,
-                ),
-                title: Text(displayName),
-                trailing: _buildActionButton(
-                  userData['uid'],
-                  displayName,
-                  isAlreadyFriend,
-                  isRequestSent,
-                  isRequestReceived,
-                ),
-              ),
-            );
-          },
+        return Card(
+          margin: const EdgeInsets.only(bottom: 8),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? Text(
+                      displayName[0].toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    )
+                  : null,
+            ),
+            title: Text(displayName),
+            trailing: _buildActionButton(
+              targetUid,
+              displayName,
+              isFriend,
+              isRequestSent,
+              isRequestReceived,
+            ),
+          ),
         );
       },
     );
@@ -270,7 +243,6 @@ class _SearchScreenState extends State<SearchScreen> {
         labelStyle: TextStyle(color: Colors.white),
       );
     }
-
     if (isRequestSent) {
       return const Chip(
         label: Text('Pending'),
@@ -278,17 +250,46 @@ class _SearchScreenState extends State<SearchScreen> {
         labelStyle: TextStyle(color: Colors.white),
       );
     }
-
     if (isRequestReceived) {
       return ElevatedButton(
         onPressed: () => _acceptFriendRequest(targetUid),
         child: const Text('Accept Friend Request'),
       );
     }
-
     return ElevatedButton(
       onPressed: () => _sendFriendRequest(targetUid, targetUsername),
       child: const Text('Add Friend'),
+    );
+  }
+}
+
+class _EmptyHint extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _EmptyHint({
+    required this.icon,
+    required this.text,
+    required this.color,
+    super.key,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: color),
+          const SizedBox(height: 16),
+          Text(
+            text,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: color),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
