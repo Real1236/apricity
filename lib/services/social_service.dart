@@ -47,7 +47,5 @@ class SocialService {
     await _db.collection('friend_requests').doc(pairId).update({
       'status': 'accepted',
     });
-
-    // TODO: Create friends list
   }
 }
