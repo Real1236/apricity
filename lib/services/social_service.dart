@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:apricity/models/relationship_state.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -106,15 +107,4 @@ class SocialService {
 
     return controller.stream;
   }
-}
-
-class RelationshipState {
-  final Set<String> friends;
-  final Set<String> outgoingPending;
-  final Set<String> incomingPending;
-  const RelationshipState({
-    required this.friends,
-    required this.outgoingPending,
-    required this.incomingPending,
-  });
 }
