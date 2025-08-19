@@ -1,16 +1,17 @@
 import 'package:apricity/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
-class UsernameSelectionScreen extends StatefulWidget {
-  const UsernameSelectionScreen({super.key});
+class DisplayNameSelectionScreen extends StatefulWidget {
+  const DisplayNameSelectionScreen({super.key});
 
   @override
-  State<UsernameSelectionScreen> createState() =>
-      _UsernameSelectionScreenState();
+  State<DisplayNameSelectionScreen> createState() =>
+      _DisplayNameSelectionScreenState();
 }
 
-class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
-  final TextEditingController _usernameController = TextEditingController();
+class _DisplayNameSelectionScreenState
+    extends State<DisplayNameSelectionScreen> {
+  final TextEditingController _displayNameController = TextEditingController();
   final AuthService _authService = AuthService();
 
   bool _isLoading = false;
@@ -19,14 +20,14 @@ class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _displayNameController.dispose();
     super.dispose();
   }
 
-  Future<void> _checkUsername() async {
-    final username = _usernameController.text.trim();
+  Future<void> _checkDisplayName() async {
+    final displayName = _displayNameController.text.trim();
 
-    if (username.isEmpty) {
+    if (displayName.isEmpty) {
       setState(() {
         _errorMessage = null;
         _isAvailable = true;
@@ -34,40 +35,40 @@ class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
       return;
     }
 
-    if (username.length < 3) {
+    if (displayName.length < 3) {
       setState(() {
-        _errorMessage = 'Username must be at least 3 characters';
+        _errorMessage = 'Display name must be at least 3 characters';
         _isAvailable = false;
       });
       return;
     }
 
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(displayName)) {
       setState(() {
         _errorMessage =
-            'Username can only contain letters, numbers, and underscores';
+            'Display name can only contain letters, numbers, and underscores';
         _isAvailable = false;
       });
       return;
     }
 
-    final isAvailable = await _authService.isUsernameAvailable(username);
+    final isAvailable = await _authService.isDisplayNameAvailable(displayName);
     setState(() {
       _isAvailable = isAvailable;
-      _errorMessage = isAvailable ? null : 'Username is already taken';
+      _errorMessage = isAvailable ? null : 'Display name is already taken';
     });
   }
 
   Future<void> _completeProfile() async {
-    final username = _usernameController.text.trim();
+    final displayName = _displayNameController.text.trim();
 
-    if (username.isEmpty || !_isAvailable) return;
+    if (displayName.isEmpty || !_isAvailable) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    final success = await _authService.completeProfile(username);
+    final success = await _authService.completeProfile(displayName);
 
     if (success && mounted) {
       // Profile completed, navigate to main app
@@ -75,7 +76,7 @@ class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
     } else if (mounted) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to save username. Please try again.';
+        _errorMessage = 'Failed to save display name. Please try again.';
       });
     }
   }
@@ -97,7 +98,7 @@ class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Choose Your Username',
+                'Choose Your Display Name',
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
@@ -111,27 +112,27 @@ class _UsernameSelectionScreenState extends State<UsernameSelectionScreen> {
               ),
               const SizedBox(height: 32),
               TextField(
-                controller: _usernameController,
+                controller: _displayNameController,
                 decoration: InputDecoration(
-                  labelText: 'Username',
+                  labelText: 'Display Name',
                   prefixText: '@',
                   border: const OutlineInputBorder(),
                   errorText: _errorMessage,
-                  suffixIcon: _usernameController.text.isNotEmpty
+                  suffixIcon: _displayNameController.text.isNotEmpty
                       ? Icon(
                           _isAvailable ? Icons.check_circle : Icons.error,
                           color: _isAvailable ? Colors.green : Colors.red,
                         )
                       : null,
                 ),
-                onChanged: (_) => _checkUsername(),
+                onChanged: (_) => _checkDisplayName(),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed:
                     _isLoading ||
                         !_isAvailable ||
-                        _usernameController.text.trim().isEmpty
+                        _displayNameController.text.trim().isEmpty
                     ? null
                     : _completeProfile,
                 child: _isLoading

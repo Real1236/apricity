@@ -65,10 +65,15 @@ class AuthService {
         'profileComplete': true,
       });
 
-      batch.set(_db.collection('profiles').doc(displayName.toLowerCase()), {
-        'uid': user.uid,
+      batch.set(_db.collection('profiles').doc(user.uid), {
+        'displayName': displayName,
         'createdAt': FieldValue.serverTimestamp(),
         'photoUrl': user.photoURL,
+      });
+
+      batch.set(_db.collection('displayNames').doc(displayName.toLowerCase()), {
+        'uid': user.uid,
+        'displayName': displayName,
       });
 
       await batch.commit();
@@ -79,15 +84,15 @@ class AuthService {
     }
   }
 
-  Future<bool> isUsernameAvailable(String username) async {
+  Future<bool> isDisplayNameAvailable(String displayName) async {
     try {
       final doc = await _db
-          .collection('profiles')
-          .doc(username.toLowerCase())
+          .collection('displayNames')
+          .doc(displayName.toLowerCase())
           .get();
       return !doc.exists;
     } catch (e) {
-      print("Error checking username: $e");
+      print("Error checking display name: $e");
       return false;
     }
   }

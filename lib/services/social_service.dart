@@ -10,7 +10,7 @@ class SocialService {
 
   Future<void> sendFriendRequest(
     String targetUid,
-    String targetUsername,
+    String targetDisplayName,
   ) async {
     final String pairId = createPairId(targetUid, _currentUid);
     await _db.collection('friend_requests').doc(pairId).set({
@@ -31,7 +31,7 @@ class SocialService {
 
   Future<QuerySnapshot> searchUsers(String query) async {
     return await _db
-        .collection('profiles')
+        .collection('displayNames')
         .orderBy(FieldPath.documentId)
         .startAt([query.toLowerCase()])
         .endAt(['${query.toLowerCase()}\uf8ff'])

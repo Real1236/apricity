@@ -87,10 +87,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _sendFriendRequest(
     String targetUid,
-    String targetUsername,
+    String targetDisplayName,
   ) async {
     try {
-      await _service.sendFriendRequest(targetUid, targetUsername);
+      await _service.sendFriendRequest(targetUid, targetDisplayName);
       // optimistic UI
       setState(
         () => _rel = RelationshipState(
@@ -101,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Friend request sent to $targetUsername')),
+          SnackBar(content: Text('Friend request sent to $targetDisplayName')),
         );
       }
     } catch (e) {
@@ -232,7 +232,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildActionButton(
     String targetUid,
-    String targetUsername,
+    String targetDisplayName,
     bool isAlreadyFriend,
     bool isRequestSent,
     bool isRequestReceived,
@@ -258,7 +258,7 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
     return ElevatedButton(
-      onPressed: () => _sendFriendRequest(targetUid, targetUsername),
+      onPressed: () => _sendFriendRequest(targetUid, targetDisplayName),
       child: const Text('Add Friend'),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:apricity/navigation/main_nav.dart';
-import 'package:apricity/screens/username_screen.dart';
+import 'package:apricity/screens/display_name_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,10 +47,10 @@ class AuthGate extends StatelessWidget {
                 if (profileComplete) {
                   return MainNav(cameras: cameras);
                 } else {
-                  return const UsernameSelectionScreen();
+                  return const DisplayNameSelectionScreen();
                 }
               } else {
-                return const UsernameSelectionScreen();
+                return const DisplayNameSelectionScreen();
               }
             },
           );
