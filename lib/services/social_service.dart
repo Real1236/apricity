@@ -107,4 +107,30 @@ class SocialService {
 
     return controller.stream;
   }
+
+  Future<List<DocumentSnapshot>> getFriends(String currentUid) async {
+    try {
+      final friendsCollection = await _db
+          .collection('users')
+          .doc(currentUid)
+          .collection('friends')
+          .get();
+
+      final friendUids = friendsCollection.docs.map((doc) => doc.id).toList();
+      if (friendUids.isEmpty) {
+        return [];
+      }
+
+      final friendDocs = await Future.wait(
+        friendUids.map(
+          (friendUid) => _db.collection('profiles').doc(friendUid).get(),
+        ),
+      );
+
+      return friendDocs.where((doc) => doc.exists).toList();
+    } catch (e) {
+      print("Error loading friends: $e");
+      throw Exception('Error loading friends: $e');
+    }
+  }
 }

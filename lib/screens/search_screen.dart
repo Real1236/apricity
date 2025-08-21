@@ -272,7 +272,6 @@ class _EmptyHint extends StatelessWidget {
     required this.icon,
     required this.text,
     required this.color,
-    super.key,
   });
   @override
   Widget build(BuildContext context) {
