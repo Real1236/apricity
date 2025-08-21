@@ -44,6 +44,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
