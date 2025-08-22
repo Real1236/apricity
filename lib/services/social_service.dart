@@ -133,4 +133,19 @@ class SocialService {
       throw Exception('Error loading friends: $e');
     }
   }
+
+  Future<List<DocumentSnapshot>> getFriendEntries(String friendUid) async {
+    try {
+      final entriesCollection = await _db
+          .collection('users')
+          .doc(friendUid)
+          .collection('entries')
+          .get();
+
+      return entriesCollection.docs;
+    } catch (e) {
+      print("Error loading friend entries: $e");
+      throw Exception('Error loading friend entries: $e');
+    }
+  }
 }

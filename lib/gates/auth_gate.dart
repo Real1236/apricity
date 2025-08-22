@@ -50,6 +50,7 @@ class AuthGate extends StatelessWidget {
                   return const DisplayNameSelectionScreen();
                 }
               } else {
+                // TODO: Handle this error, this is not the right screen
                 return const DisplayNameSelectionScreen();
               }
             },

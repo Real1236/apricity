@@ -1,3 +1,4 @@
+import 'package:apricity/screens/timeline_screen.dart';
 import 'package:apricity/services/social_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -74,9 +75,40 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     : null,
               ),
               title: Text(friendDisplayName),
+              onTap: () => _showFriendEntries(friendUid),
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showFriendEntries(String friendUid) async {
+    final entries = await _socialService.getFriendEntries(friendUid);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (c) => DraggableScrollableSheet(
+        expand: false,
+        builder: (ctx, controller) => ListView.separated(
+          controller: controller,
+          padding: const EdgeInsets.all(16),
+          itemCount: entries.length,
+          itemBuilder: (context, index) {
+            final entry = entries[index];
+            final data = entry.data() as Map<String, dynamic>;
+
+            return EntryCard(
+              caption: data['caption'] as String? ?? '',
+              photoUrl: data['photoUrl'] as String?,
+              createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+            );
+          },
+          separatorBuilder: (context, index) => const Divider(),
+        ),
       ),
     );
   }
