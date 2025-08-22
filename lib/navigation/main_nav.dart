@@ -1,5 +1,7 @@
 import 'package:apricity/screens/calendar_screen.dart';
+import 'package:apricity/screens/friends_screen.dart';
 import 'package:apricity/screens/gratitude_snap_screen.dart';
+import 'package:apricity/screens/search_screen.dart';
 import 'package:apricity/screens/timeline_screen.dart';
 import 'package:apricity/services/entry_service.dart';
 import 'package:apricity/widgets/sign_out_dialog.dart';
@@ -9,7 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-enum AppTab { timeline, snap, calendar }
+enum AppTab { timeline, snap, calendar, friends, search }
 
 class TabScreen {
   const TabScreen({
@@ -81,9 +83,27 @@ class _MainNavState extends State<MainNav> {
         build: () => CalendarScreen(key: _calendarKey),
         onEnter: () => _calendarKey.currentState?.refreshCurrentMonth(),
       ),
+      AppTab.friends: TabScreen(
+        title: 'Friends',
+        icon: const Icon(Icons.people_outline),
+        selectedIcon: const Icon(Icons.people),
+        build: () => FriendsScreen(),
+      ),
+      AppTab.search: TabScreen(
+        title: 'Search',
+        icon: const Icon(Icons.search_outlined),
+        selectedIcon: const Icon(Icons.search),
+        build: () => SearchScreen(),
+      ),
     };
 
-    _tabsInOrder = [AppTab.timeline, AppTab.snap, AppTab.calendar];
+    _tabsInOrder = [
+      AppTab.timeline,
+      AppTab.snap,
+      AppTab.calendar,
+      AppTab.friends,
+      AppTab.search,
+    ];
   }
 
   @override
